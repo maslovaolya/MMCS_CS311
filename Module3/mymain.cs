@@ -10,14 +10,15 @@ namespace GeneratedLexer
     {
         static void Main(string[] args)
         {
-            int cnt_id = 0;//êîë-âî èäåíòèôèêàòîðîâ
-            int min_id_len = Int32.MaxValue, max_id_len = 0; //ìèíèìàëüíàÿ, ìàêñèìàëüíàÿ äëèíû èäåíòèôèêàòîðîâ
-            double avg_id_len = 0; //ñðåäíÿÿ äëèíà èäåíòèôèêàòîðà
+            int cnt_id = 0;//ÐºÐ¾Ð»-Ð²Ð¾ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð²
+            int sum_id = 0;//ÑÑƒÐ¼Ð¼Ð° Ð´Ð»Ð¸Ð½ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð²
+            int min_id_len = Int32.MaxValue, max_id_len = 0; //Ð¼Ð¸Ð½Ð¸Ð¼Ð°Ð»ÑŒÐ½Ð°Ñ, Ð¼Ð°ÐºÑÐ¸Ð¼Ð°Ð»ÑŒÐ½Ð°Ñ Ð´Ð»Ð¸Ð½Ñ‹ Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð¾Ð²
+            double avg_id_len = 0; //ÑÑ€ÐµÐ´Ð½ÑÑ Ð´Ð»Ð¸Ð½Ð° Ð¸Ð´ÐµÐ½Ñ‚Ð¸Ñ„Ð¸ÐºÐ°Ñ‚Ð¾Ñ€Ð°
 
-            int sum_int = 0; //ñóììà âñåõ öåëûõ
-            double sum_d = 0; //ñóììà âñåõ âåùåñòâåííûõ
+            int sum_int = 0; //ÑÑƒÐ¼Ð¼Ð° Ð²ÑÐµÑ… Ñ†ÐµÐ»Ñ‹Ñ…
+            double sum_d = 0; //ÑÑƒÐ¼Ð¼Ð° Ð²ÑÐµÑ… Ð²ÐµÑ‰ÐµÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ñ…
 
-            // ×òîáû âåùåñòâåííûå ÷èñëà ðàñïîçíàâàëèñü è îòîáðàæàëèñü â ôîðìàòå 3.14 (à íå 3,14 êàê â ðóññêîé Culture)
+            // Ð§Ñ‚Ð¾Ð±Ñ‹ Ð²ÐµÑ‰ÐµÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ðµ Ñ‡Ð¸ÑÐ»Ð° Ñ€Ð°ÑÐ¿Ð¾Ð·Ð½Ð°Ð²Ð°Ð»Ð¸ÑÑŒ Ð¸ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°Ð»Ð¸ÑÑŒ Ð² Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚Ðµ 3.14 (Ð° Ð½Ðµ 3,14 ÐºÐ°Ðº Ð² Ñ€ÑƒÑÑÐºÐ¾Ð¹ Culture)
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
             var fname = @"..\..\a.txt";
@@ -30,8 +31,27 @@ namespace GeneratedLexer
             do {
                 tok = scanner.yylex();
 
+                // Ð—Ð°Ð´Ð°Ð½Ð¸Ðµ 2
+                if (tok == (int)Tok.ID)
+                {
+                    ++cnt_id;
+                    int l = scanner.yytext.Length;
+                    sum_id += l;
+                    if (l > max_id_len)
+                        max_id_len = l;
+                    if (l < min_id_len)
+                        min_id_len = l;
+                }
+
+                // Ð—Ð°Ð´Ð°Ð½Ð¸Ðµ 3
+                else if (tok == (int)Tok.INUM)
+                    sum_int += scanner.LexValueInt;
+                else if (tok == (int)Tok.RNUM)
+                    sum_d += scanner.LexValueDouble;
+
                 if (tok == (int)Tok.EOF)
                 {
+                    avg_id_len = sum_id / (double)cnt_id;
                     Console.WriteLine();
                     Console.WriteLine("number of id: {0:D}", cnt_id);
                     Console.WriteLine("average length of the id: {0:N}", avg_id_len / cnt_id);
