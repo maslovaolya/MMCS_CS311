@@ -13,6 +13,7 @@ namespace  GeneratedLexer
         private byte[] inputText = new byte[255];
 
         public int idCount = 0;
+        public int idSum = 0;
         public int minIdLength = Int32.MaxValue;
         public double avgIdLength = 0;
         public int maxIdLength = 0;
@@ -37,15 +38,42 @@ namespace  GeneratedLexer
 
         public void Lex()
         {
-            // ×òîáû âåùåñòâåííûå ÷èñëà ðàñïîçíàâàëèñü è îòîáðàæàëèñü â ôîðìàòå 3.14 (à íå 3,14 êàê â ðóññêîé Culture)
+            // Ð§Ñ‚Ð¾Ð±Ñ‹ Ð²ÐµÑ‰ÐµÑÑ‚Ð²ÐµÐ½Ð½Ñ‹Ðµ Ñ‡Ð¸ÑÐ»Ð° Ñ€Ð°ÑÐ¿Ð¾Ð·Ð½Ð°Ð²Ð°Ð»Ð¸ÑÑŒ Ð¸ Ð¾Ñ‚Ð¾Ð±Ñ€Ð°Ð¶Ð°Ð»Ð¸ÑÑŒ Ð² Ñ„Ð¾Ñ€Ð¼Ð°Ñ‚Ðµ 3.14 (Ð° Ð½Ðµ 3,14 ÐºÐ°Ðº Ð² Ñ€ÑƒÑÑÐºÐ¾Ð¹ Culture)
             System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US");
 
             int tok = 0;
             do {
                 tok = myScanner.yylex();
 
+                // Ð—Ð°Ð´Ð°Ð½Ð¸Ðµ 2
+                if (tok == (int)Tok.ID)
+                {
+                    ++idCount;
+                    int l = myScanner.yytext.Length;
+                    idSum += l;
+                    if (l > maxIdLength)
+                        maxIdLength = l;
+                    if (l < minIdLength)
+                        minIdLength = l;
+                }
+
+                // Ð—Ð°Ð´Ð°Ð½Ð¸Ðµ 3
+                else if (tok == (int)Tok.INUM)
+                    sumInt += myScanner.LexValueInt;
+                else if (tok == (int)Tok.RNUM)
+                    sumDouble += myScanner.LexValueDouble;
+
+                // Ð”Ð¾Ð¿Ð¾Ð»Ð½Ð¸Ñ‚ÐµÐ»ÑŒÐ½Ð¾Ðµ Ð·Ð°Ð´Ð°Ð½Ð¸Ðµ 4
+                else if (tok == (int)Tok.LONGCOMMENT)
+                {
+                    var words = myScanner.TokToString((Tok)tok).Split(' ');
+                    for (int i = 1; i < words.Length - 1; ++i)
+                        idsInComment.Add(words[i]);
+                }
+
                 if (tok == (int)Tok.EOF)
                 {
+                    avgIdLength = idSum / (double)idCount;
                     break;
                 }
             } while (true);
