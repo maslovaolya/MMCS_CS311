@@ -7,12 +7,18 @@ AlphaDigit {Alpha}|{Digit}
 INTNUM  {Digit}+
 REALNUM {INTNUM}\.{INTNUM}
 ID {Alpha}{AlphaDigit}* 
+DotChr [^\r\n]
+OneLineCmnt \/\/{DotChr}*
+Str \'[^']*\'
 
-// Здесь можно делать описания типов, переменных и методов - они попадают в класс Scanner
+// Р—РґРµСЃСЊ РјРѕР¶РЅРѕ РґРµР»Р°С‚СЊ РѕРїРёСЃР°РЅРёСЏ С‚РёРїРѕРІ, РїРµСЂРµРјРµРЅРЅС‹С… Рё РјРµС‚РѕРґРѕРІ - РѕРЅРё РїРѕРїР°РґР°СЋС‚ РІ РєР»Р°СЃСЃ Scanner
 %{
   public int LexValueInt;
   public double LexValueDouble;
+  public string IDs;
 %}
+
+%x COMMENT
 
 %%
 {INTNUM} { 
@@ -41,6 +47,47 @@ cycle {
   return (int)Tok.ID;
 }
 
+// Р”РѕРїРѕР»РЅРёС‚РµР»СЊРЅС‹Рµ Р·Р°РґР°РЅРёСЏ
+
+{OneLineCmnt} {
+  return (int)Tok.COMMENT;
+}
+
+"{" {
+  BEGIN(COMMENT);
+  IDs = "";
+}
+
+<COMMENT> begin {
+  IDs += "";
+}
+
+<COMMENT> end {
+  IDs += "";
+}
+
+<COMMENT> cycle {
+  IDs += "";
+}
+
+<COMMENT> <<EOF>> {
+  CommentError();
+  return 0;
+}
+
+<COMMENT> {ID} {
+  IDs += yytext + " ";
+}
+
+<COMMENT> "}" {
+  BEGIN(INITIAL);
+  return (int)Tok.LONGCOMMENT;
+}
+
+{Str} {
+  return (int)Tok.STRINGAP;
+}
+
 ":" { 
   return (int)Tok.COLON;
 }
@@ -55,16 +102,21 @@ cycle {
 
 [^ \r\n] {
 	LexError();
-	return 0; // конец разбора
+	return 0; // РєРѕРЅРµС† СЂР°Р·Р±РѕСЂР°
 }
 
 %%
 
-// Здесь можно делать описания переменных и методов - они тоже попадают в класс Scanner
+// Р—РґРµСЃСЊ РјРѕР¶РЅРѕ РґРµР»Р°С‚СЊ РѕРїРёСЃР°РЅРёСЏ РїРµСЂРµРјРµРЅРЅС‹С… Рё РјРµС‚РѕРґРѕРІ - РѕРЅРё С‚РѕР¶Рµ РїРѕРїР°РґР°СЋС‚ РІ РєР»Р°СЃСЃ Scanner
 
 public void LexError()
 {
-	Console.WriteLine("({0},{1}): Неизвестный символ {2}", yyline, yycol, yytext);
+	Console.WriteLine("({0},{1}): РќРµРёР·РІРµСЃС‚РЅС‹Р№ СЃРёРјРІРѕР» {2}", yyline, yycol, yytext);
+}
+
+public void CommentError()
+{
+	Console.WriteLine("РќРµР·Р°РєСЂС‹С‚С‹Р№ РєРѕРјРјРµРЅС‚Р°СЂРёР№, РѕС‚СЃСѓС‚СЃС‚РІСѓРµС‚ }.");
 }
 
 public string TokToString(Tok tok)
@@ -77,6 +129,8 @@ public string TokToString(Tok tok)
 			return tok + " " + LexValueInt;
 		case Tok.RNUM:
 			return tok + " " + LexValueDouble;
+		case Tok.LONGCOMMENT:
+			return tok + " " + IDs;
 		default:
 			return tok + "";
 	}
